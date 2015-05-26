@@ -1,18 +1,19 @@
 require 'json'
 require 'celluloid/current'
 
-class SystemMonitor
+class Cellumon
 
   include Celluloid
 
   class << self
-    def start!
-      puts "* Starting Actor: SystemMonitor"
-      SystemMonitor.supervise as: :SystemMonitor
+    def start!(name=:cellumon)
+      puts "* Starting Cellumon"
+      Cellumon.supervise(as: name)
     end
   end
 
   INTERVALS = {
+    :thread_survey => 30,
     :thread_report => 15,
     :thread_summary => 1
   }
@@ -28,6 +29,14 @@ class SystemMonitor
       ready! monitor
     }
   end
+
+    def thread_survey!
+      if ready? :thread_survey
+        output Celluloid.stack_summary
+        ready! :thread_survey
+      end
+      after(INTERVALS[:thread_survey]) { thread_survey! }
+    end
 
   def thread_summary!
     if ready? :thread_summary

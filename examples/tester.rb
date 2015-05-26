@@ -1,6 +1,6 @@
 $LOAD_PATH.push(File.expand_path("../../lib/", __FILE__))
-require 'system_monitor'
+require 'cellumon'
 
-SystemMonitor.start!
+Cellumon.start!
 
 sleep
