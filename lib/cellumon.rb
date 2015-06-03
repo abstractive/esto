@@ -30,13 +30,13 @@ class Cellumon
     }
   end
 
-    def thread_survey!
-      if ready? :thread_survey
-        output Celluloid.stack_summary
-        ready! :thread_survey
-      end
-      after(INTERVALS[:thread_survey]) { thread_survey! }
+  def thread_survey!
+    if ready? :thread_survey
+      output Celluloid.stack_summary
+      ready! :thread_survey
     end
+    after(INTERVALS[:thread_survey]) { thread_survey! }
+  end
 
   def thread_summary!
     if ready? :thread_summary
@@ -49,12 +49,12 @@ class Cellumon
   def thread_report!
     if ready? :thread_report
       threads = Thread.list.inject({}) { |l,t| l[t.object_id] = t.status; l }
-      puts "> Status: Threads #{threads.count}"
-      puts "* Running: #{threads.select { |id,status| status == 'run' }.count}"
-      puts "* Sleeping: #{threads.select { |id,status| status == 'sleep' }.count}"
-      puts "* Aborting: #{threads.select { |id,status| status == 'aborting' }.count}"
-      puts "* Terminated Normally: #{threads.select { |id,status| status === false }.count}"
-      puts "* Terminated by Exception: #{threads.select { |id,status| status.nil? }.count}"
+      running = threads.select { |id,status| status == 'run' }.count
+      sleeping = threads.select { |id,status| status == 'sleep' }.count
+      aborting = threads.select { |id,status| status == 'aborting' }.count
+      normally_terminated = threads.select { |id,status| status === false }.count
+      exception_terminated = threads.select { |id,status| status.nil? }.count
+      puts "> Threads #{threads.count} ... Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}) Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
       ready! :thread_report
     end
     after(INTERVALS[:thread_report]) { thread_report! }
