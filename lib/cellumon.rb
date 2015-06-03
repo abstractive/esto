@@ -22,8 +22,6 @@ class Cellumon
     @semaphor = {}
     @status = {}
     @timers = {}
-    start_thread_summary!
-    start_thread_report!
   end
 
   INTERVALS.each { |m,i|
