@@ -54,7 +54,7 @@ class Cellumon
       aborting = threads.select { |id,status| status == 'aborting' }.count
       normally_terminated = threads.select { |id,status| status === false }.count
       exception_terminated = threads.select { |id,status| status.nil? }.count
-      puts "> Threads #{threads.count} ... Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}) Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
+      puts "\n>> Threads #{threads.count} ... Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}) Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
       ready! :thread_report
     end
     after(INTERVALS[:thread_report]) { thread_report! }
