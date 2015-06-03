@@ -7,7 +7,6 @@ class Cellumon
 
   class << self
     def start!(name=:cellumon)
-      puts "* Starting Cellumon"
       Cellumon.supervise(as: name)
       Celluloid[:cellumon]
     end
