@@ -21,21 +21,30 @@ class Cellumon
   def initialize
     @semaphor = {}
     @status = {}
-
-    INTERVALS.each { |monitor, interval|
-      @semaphor[monitor] = Mutex.new
-      @status[monitor] = :initializing
-      async.send :"#{monitor}!"
-      ready! monitor
-    }
+    start_thread_summary!
+    start_thread_report!
   end
+
+  INTERVALS.each { |m,i|
+    define_method(:"start_#{m}!") {
+      @timers[m] = nil
+      @semaphor[m] = Mutex.new
+      @status[m] = :initializing
+      async.send :"#{m}!"
+      ready! m
+    }
+    define_method(:"stop_#{m}!") {
+      stopped! m
+      @timers[m].cancel if @timers[m]
+    }
+  }
 
   def thread_survey!
     if ready? :thread_survey
       output Celluloid.stack_summary
       ready! :thread_survey
     end
-    after(INTERVALS[:thread_survey]) { thread_survey! }
+    @timers[:thread_survey] = after(INTERVALS[:thread_survey]) { thread_survey! }
   end
 
   def thread_summary!
@@ -43,7 +52,7 @@ class Cellumon
       print " #{Thread.list.count} "
       ready! :thread_summary
     end
-    after(INTERVALS[:thread_summary]) { thread_summary! }
+    @timers[:thread_summary] = after(INTERVALS[:thread_summary]) { thread_summary! }
   end
 
   def thread_report!
@@ -57,7 +66,7 @@ class Cellumon
       puts "\n>> Threads #{threads.count} ... Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}) Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
       ready! :thread_report
     end
-    after(INTERVALS[:thread_report]) { thread_report! }
+    @timers[:thread_report] = after(INTERVALS[:thread_report]) { thread_report! }
   end
 
   private
@@ -68,6 +77,10 @@ class Cellumon
 
   def running! monitor
     @semaphor[monitor].synchronize { @status[monitor] = :running }
+  end
+
+  def stopped! monitor
+    @semaphor[monitor].synchronize { @status[monitor] = :stopped }
   end
 
   def ready? monitor
