@@ -21,6 +21,7 @@ class Cellumon
   def initialize
     @semaphor = {}
     @status = {}
+    @timers = {}
     start_thread_summary!
     start_thread_report!
   end
