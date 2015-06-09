@@ -42,7 +42,7 @@ class Cellumon
 
   def thread_survey!
     if ready? :thread_survey
-      output Celluloid.stack_summary
+      Celluloid.stack_summary
       ready! :thread_survey
     end
     @timers[:thread_survey] = after(@intervals[:thread_survey]) { thread_survey! }
