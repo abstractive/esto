@@ -12,7 +12,7 @@ class Cellumon
     end
   end
 
-  INTERVALS = {
+  MONITORS = {
     :thread_survey => 30,
     :thread_report => 15,
     :thread_summary => 1
@@ -22,10 +22,12 @@ class Cellumon
     @semaphor = {}
     @status = {}
     @timers = {}
+    @intervals = MONITORS.dup
   end
 
-  INTERVALS.each { |m,i|
-    define_method(:"start_#{m}!") {
+  MONITORS.each { |m,i|
+    define_method(:"start_#{m}!") { |interval=nil|
+      @intervals[m] = interval || MONITORS[m]
       @timers[m] = nil
       @semaphor[m] = Mutex.new
       @status[m] = :initializing
@@ -43,7 +45,7 @@ class Cellumon
       output Celluloid.stack_summary
       ready! :thread_survey
     end
-    @timers[:thread_survey] = after(INTERVALS[:thread_survey]) { thread_survey! }
+    @timers[:thread_survey] = after(@intervals[:thread_survey]) { thread_survey! }
   end
 
   def thread_summary!
@@ -51,7 +53,7 @@ class Cellumon
       print " #{Thread.list.count} "
       ready! :thread_summary
     end
-    @timers[:thread_summary] = after(INTERVALS[:thread_summary]) { thread_summary! }
+    @timers[:thread_summary] = after(@intervals[:thread_summary]) { thread_summary! }
   end
 
   def thread_report!
@@ -65,7 +67,7 @@ class Cellumon
       puts "\n>> Threads #{threads.count} ... Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}) Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
       ready! :thread_report
     end
-    @timers[:thread_report] = after(INTERVALS[:thread_report]) { thread_report! }
+    @timers[:thread_report] = after(@intervals[:thread_report]) { thread_report! }
   end
 
   private
