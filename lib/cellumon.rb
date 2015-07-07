@@ -57,7 +57,7 @@ class Cellumon
     total = total.to_i
     gb = (total / (1024 * 1024)).to_i
     mb = total % gb
-    "#{'%0.4' % "#{gb}.#{mb}".to_float}gb"
+    "#{'%0.4f' % "#{gb}.#{mb}"}gb"
   end
 
   def thread_survey!
