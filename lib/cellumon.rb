@@ -13,9 +13,10 @@ class Cellumon
   end
 
   MONITORS = {
-    :thread_survey => 30,
-    :thread_report => 15,
-    :thread_summary => 1
+    thread_survey: 30,
+    thread_report: 15,
+    thread_summary: 1,
+    memory_count: 13
   }
 
   def initialize
@@ -39,6 +40,14 @@ class Cellumon
       @timers[m].cancel if @timers[m]
     }
   }
+    
+  def memory_count!
+    if ready? :memory_count
+      console("Memory usage: #{`pmap #{Process.pid} | tail -1`[10,40].strip}")
+      ready! :memory_count
+    end    
+    @timers[:memory_count] = after(@intervals[:memory_count]) { memory_count! }
+  end
 
   def thread_survey!
     if ready? :thread_survey
@@ -64,12 +73,16 @@ class Cellumon
       aborting = threads.select { |id,status| status == 'aborting' }.count
       normally_terminated = threads.select { |id,status| status === false }.count
       exception_terminated = threads.select { |id,status| status.nil? }.count
-      puts "*, [#{Time.now.strftime('%FT%T.%L')}] Cellumon > Threads #{threads.count}; " +
+      console "Threads #{threads.count}; " +
         "Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}); " +
         "Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
       ready! :thread_report
     end
     @timers[:thread_report] = after(@intervals[:thread_report]) { thread_report! }
+  end
+
+  def console(message)
+    puts "*, [#{Time.now.strftime('%FT%T.%L')}] Cellumon > #{message}"
   end
 
   private
