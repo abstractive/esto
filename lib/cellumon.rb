@@ -28,7 +28,7 @@ class Cellumon
 
   MONITORS.each { |m,i|
     define_method(:"start_#{m}!") { |interval=nil|
-      async.send1(:"starting_#{m}")
+      async.send(:"starting_#{m}")
     }
     define_method(:"starting_#{m}") { |interval=nil|
       @intervals[m] = interval || MONITORS[m]
