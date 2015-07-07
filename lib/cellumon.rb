@@ -46,10 +46,18 @@ class Cellumon
     
   def memory_count!
     if ready? :memory_count
-      console("Memory usage: #{`pmap #{Process.pid} | tail -1`[10,40].strip}")
+      total = `pmap #{Process.pid} | tail -1`[10,40].strip[0..-1]
+      console("Memory usage: #{memory(total)}")
       ready! :memory_count
     end    
     @timers[:memory_count] = after(@intervals[:memory_count]) { memory_count! }
+  end
+
+  def memory(total)
+    total = total.to_i
+    gb = (total / (1024 * 1024)).to_i
+    mb = total % gb
+    "#{'%0.4' % "#{gb}.#{mb}".to_float}gb"
   end
 
   def thread_survey!
