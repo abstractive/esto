@@ -19,11 +19,16 @@ class Cellumon
     memory_count: 13
   }
 
-  def initialize
+  def initialize(mark=false)
     @semaphor = {}
     @status = {}
     @timers = {}
+    @mark = mark
     @intervals = MONITORS.dup
+  end
+
+  def mark
+    @mark ? "Cellumon > " : ""
   end
 
   MONITORS.each { |m,i|
@@ -93,7 +98,7 @@ class Cellumon
   end
 
   def console(message)
-    puts "*, [#{Time.now.strftime('%FT%T.%L')}] Cellumon > #{message}"
+    puts "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
   end
 
   private
