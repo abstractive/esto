@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
 
   gem.authors      = ["digitalextremist //"]
   gem.email        = ["code@extremist.digital"]
-  gem.homepage     = "https://github.com/digitalextremist/cellumon"
+  gem.homepage     = "https://github.com/abstractive/cellumon"
 
   gem.required_ruby_version     = ">= 1.9.2"
   gem.required_rubygems_version = ">= 1.3.6"
