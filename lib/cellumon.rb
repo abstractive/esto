@@ -84,14 +84,12 @@ class Cellumon
   def thread_report!
     if ready? :thread_report
       threads = Thread.list.inject({}) { |l,t| l[t.object_id] = t.status; l }
-      running = threads.select { |id,status| status == 'run' }.count
-      sleeping = threads.select { |id,status| status == 'sleep' }.count
-      aborting = threads.select { |id,status| status == 'aborting' }.count
-      normally_terminated = threads.select { |id,status| status === false }.count
-      exception_terminated = threads.select { |id,status| status.nil? }.count
-      console "Threads #{threads.count}; " +
-        "Running (#{running}) Sleeping (#{sleeping}) Aborting (#{aborting}); " +
-        "Terminated: Normally (#{normally_terminated}) Exception (#{exception_terminated})"
+      r = threads.select { |id,status| status == 'run' }.count
+      s = threads.select { |id,status| status == 'sleep' }.count
+      a = threads.select { |id,status| status == 'aborting' }.count
+      nt = threads.select { |id,status| status === false }.count
+      te = threads.select { |id,status| status.nil? }.count
+      console "Threads #{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
       ready! :thread_report
     end
     @timers[:thread_report] = after(@intervals[:thread_report]) { thread_report! }
