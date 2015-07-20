@@ -1,3 +1,3 @@
-# Cellumon
+`Abstractive::Proceso`
 
-Thread summary and reporting actor for use in finding thread leaks.
+Monitor processes; uptime, threads and memory, and actor system states.

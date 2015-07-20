@@ -1,9 +1,11 @@
 require 'json'
 require 'celluloid/current'
+require 'abstractive/timespans'
 
-class Cellumon
+class Abstractive::Proceso
 
   include Celluloid
+  include Abstractive::TimeSpans
 
   class << self
     def start!(options={})
@@ -18,6 +20,7 @@ class Cellumon
   end
 
   MONITORS = {
+    uptime: 90,
     thread_survey: 30,
     thread_report: 15,
     thread_summary: 3,
@@ -34,6 +37,7 @@ class Cellumon
     @mark = options.fetch(:mark, false)
     @intervals = MONITORS.dup
     @options = options
+    @start = Time.now
     async.start
   end
 
@@ -41,7 +45,7 @@ class Cellumon
     if @options[:monitors].is_a?(Array)
       debug("Monitors:") if @debug
       @options[:monitors].each { |monitor|
-        debug("* #{monitor} every #{MONITORS[monitor]} seconds.") if @debug
+        debug("* #{monitor} every #{readable_duration(MONITORS[monitor])}.") if @debug
         send("start_#{monitor}!")
       }
     else
@@ -66,6 +70,10 @@ class Cellumon
       @timers[m].cancel if @timers[m]
     }
   }
+    
+  def uptime!
+    trigger!(:uptime) { console "Uptime: #{readable_duration(noteTime.now.to_i - @start.to_i)}" }
+  end
     
   def memory_count!
     trigger!(:memory_count) { console memory }
@@ -108,7 +116,7 @@ class Cellumon
 
   def console(message, options={})
     if @logger
-      @logger.console(message, options.merge(reporter: "Cellumon"))
+      @logger.console(message, options.merge(local: true, reporter: "Cellumon"))
     else
       plain_output("#{mark}#{message}")
     end
