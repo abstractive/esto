@@ -6,9 +6,13 @@ class Cellumon
   include Celluloid
 
   class << self
-    def start!(name=:cellumon)
+    def start!(options={})
+      name = options.fetch(:name, :cellumon)
       Cellumon.supervise(as: name)
-      Celluloid[:cellumon]
+      options.fetch(:start,[]).each { |monitor|
+        Celluloid[name].send("start_#{monitor}!")
+      }
+      Celluloid[name]
     end
   end
 
@@ -101,21 +105,14 @@ class Cellumon
 
   private
 
-  def ready! monitor
-    @semaphor[monitor].synchronize { @status[monitor] = :ready }
-  end
-
-  def running! monitor
-    @semaphor[monitor].synchronize { @status[monitor] = :running }
-  end
-
-  def stopped! monitor
-    @semaphor[monitor].synchronize { @status[monitor] = :stopped }
-  end
-
-  def ready? monitor
-    @semaphor[monitor].synchronize { @status[monitor] == :ready }
-  end
+  [:ready, :running, :stopped].each { |state|
+    define_method("#{state}!") { |monitor|
+      @semaphor[monitor].synchronize { @status[monitor] = state }
+    }
+    define_method("#{state}?") { |monitor|
+      @semaphor[monitor].synchronize { @status[monitor] == state }
+    }
+  }
 
   def output object
     puts JSON.pretty_generate(object)
