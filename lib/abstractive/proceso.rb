@@ -1,19 +1,16 @@
 require 'json'
-require 'abstractive/actor'
+require 'abstractive'
 require 'abstractive/timespans'
+require 'abstractive/actor'
 
 class Abstractive::Proceso < Abstractive::Actor
 
-  include Abstractive::TimeSpans
+  include Abstractive::TimeSpans::Methods
 
   class << self
     def start!(options={})
-      name = options.delete(:name) || :cellumon
-      unless options.fetch(:monitors, nil).is_a? Array
-        puts "Cellumon > No monitors specified"
-        return
-      end
-      Cellumon.supervise(as: name, args: [options])
+      name = options.delete(:name) || :proceso
+      Abstractive::Proceso.supervise(as: name, args: [options])
       Celluloid[name]
     end
   end
@@ -71,7 +68,7 @@ class Abstractive::Proceso < Abstractive::Actor
   }
     
   def uptime!
-    trigger!(:uptime) { console "Uptime: #{readable_duration(duration(Time.now, @start)}" }
+    trigger!(:uptime) { console "Uptime: #{readable_duration(duration(Time.now, @start))}" }
   end
     
   def memory_count!
