@@ -8,10 +8,10 @@ class Cellumon
   class << self
     def start!(options={})
       name = options.fetch(:name, :cellumon)
-      Cellumon.supervise(as: name)
-      options.fetch(:start,[]).each { |monitor|
-        Celluloid[name].send("start_#{monitor}!")
-      }
+      monitors = options.delete(:monitors)
+      return unless monitors.is_a? Array
+      Cellumon.supervise(as: name, args: [options])
+      monitors.each { |monitor| Celluloid[name].send("start_#{monitor}!") }
       Celluloid[name]
     end
   end
@@ -23,11 +23,12 @@ class Cellumon
     memory_count: 13
   }
 
-  def initialize(mark=false)
+  def initialize(options={})
     @semaphor = {}
     @status = {}
     @timers = {}
-    @mark = mark
+    @logger = options.fetch(:logger, nil)
+    @mark = options.fetch(:mark, false)
     @intervals = MONITORS.dup
   end
 
@@ -100,7 +101,13 @@ class Cellumon
   end
 
   def console(message)
-    puts "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
+    if @logger && @logger.respond_to? :console
+      @logger.console("#{mark}#{message}", reporter: "Cellumon")
+    else
+      message = "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
+      STDERR.puts message
+      STDOUT.puts message
+    end
   end
 
   private
