@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |gem|
   gem.name         = "cellumon"
-  gem.version      = "0.3.0"
+  gem.version      = "0.4.0"
   gem.platform     = Gem::Platform::RUBY
   gem.summary      = "Monitor threads, processes, and states of Celluloid and its Actor System."
   gem.description  = "Thread summary and reporting actor, utility for finding leaks and monitoring."
