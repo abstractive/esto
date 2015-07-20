@@ -19,8 +19,9 @@ class Cellumon
   MONITORS = {
     thread_survey: 30,
     thread_report: 15,
-    thread_summary: 1,
-    memory_count: 13
+    thread_summary: 3,
+    memory_count: 13,
+    thread_and_memory_report: 45
   }
 
   def initialize(options={})
@@ -30,10 +31,6 @@ class Cellumon
     @logger = options.fetch(:logger, nil)
     @mark = options.fetch(:mark, false)
     @intervals = MONITORS.dup
-  end
-
-  def mark
-    @mark ? "Cellumon > " : ""
   end
 
   MONITORS.each { |m,i|
@@ -55,49 +52,42 @@ class Cellumon
   }
     
   def memory_count!
-    if ready? :memory_count
-      total = `pmap #{Process.pid} | tail -1`[10,40].strip[0..-1]
-      console("Memory usage: #{memory(total)}")
-      ready! :memory_count
-    end    
-    @timers[:memory_count] = after(@intervals[:memory_count]) { memory_count! }
-  end
-
-  def memory(total)
-    total = total.to_i
-    gb = (total / (1024 * 1024)).to_i
-    mb = total % gb
-    "#{'%0.2f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
+    trigger!(:memory_count) { console memory }
   end
 
   def thread_survey!
-    if ready? :thread_survey
-      Celluloid.stack_summary
-      ready! :thread_survey
-    end
-    @timers[:thread_survey] = after(@intervals[:thread_survey]) { thread_survey! }
+    trigger!(:thread_survey) { Celluloid.stack_summary }
   end
 
   def thread_summary!
-    if ready? :thread_summary
-      print " #{Thread.list.count} "
-      ready! :thread_summary
-    end
-    @timers[:thread_summary] = after(@intervals[:thread_summary]) { thread_summary! }
+    trigger!(:thread_summary) { print " #{Thread.list.count} " }
   end
 
   def thread_report!
-    if ready? :thread_report
-      threads = Thread.list.inject({}) { |l,t| l[t.object_id] = t.status; l }
-      r = threads.select { |id,status| status == 'run' }.count
-      s = threads.select { |id,status| status == 'sleep' }.count
-      a = threads.select { |id,status| status == 'aborting' }.count
-      nt = threads.select { |id,status| status === false }.count
-      te = threads.select { |id,status| status.nil? }.count
-      console "Threads #{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
-      ready! :thread_report
-    end
-    @timers[:thread_report] = after(@intervals[:thread_report]) { thread_report! }
+    trigger!(:thread_report) { console threads }
+  end
+
+  def thread_and_memory_report!
+    trigger!(:thread_and_memory_report) { "#{threads}; #{memory}" }
+  end
+
+  private
+
+  def threads
+    threads = Thread.list.inject({}) { |l,t| l[t.object_id] = t.status; l }
+    r = threads.select { |id,status| status == 'run' }.count
+    s = threads.select { |id,status| status == 'sleep' }.count
+    a = threads.select { |id,status| status == 'aborting' }.count
+    nt = threads.select { |id,status| status === false }.count
+    te = threads.select { |id,status| status.nil? }.count
+    "Threads #{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
+  end
+
+  def memory
+    total = `pmap #{Process.pid} | tail -1`[10,40].strip[0..-1].to_i
+    gb = (total / (1024 * 1024)).to_i
+    mb = total % gb
+    "Memory: #{'%0.2f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
   end
 
   def console(message)
@@ -110,7 +100,19 @@ class Cellumon
     end
   end
 
-  private
+  def trigger!(monitor)
+    if ready?(monitor)
+      result = yield
+      ready! monitor
+    end
+    @timers[monitor].cancel rescue nil
+    @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
+    result
+  end
+
+  def mark
+    @mark ? "Cellumon > " : ""
+  end
 
   [:ready, :running, :stopped].each { |state|
     define_method("#{state}!") { |monitor|
