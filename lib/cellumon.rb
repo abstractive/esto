@@ -8,10 +8,11 @@ class Cellumon
   class << self
     def start!(options={})
       name = options.delete(:name) || :cellumon
-      monitors = options.delete(:monitors)
-      return unless monitors.is_a? Array
+      unless options.fetch(:monitors, nil).is_a? Array
+        puts "Cellumon > No monitors specified"
+        return
+      end
       Cellumon.supervise(as: name, args: [options])
-      monitors.each { |monitor| Celluloid[name].send("start_#{monitor}!") }
       Celluloid[name]
     end
   end
@@ -28,9 +29,24 @@ class Cellumon
     @semaphor = {}
     @status = {}
     @timers = {}
+    @debug = options.fetch(:debug, false)
     @logger = options.fetch(:logger, nil)
     @mark = options.fetch(:mark, false)
     @intervals = MONITORS.dup
+    @options = options
+    async.start
+  end
+
+  def start
+    if @options[:monitors].is_a?(Array)
+      debug("Monitors:") if @debug
+      @options[:monitors].each { |monitor|
+        debug("* #{monitor} every #{MONITORS[monitor]} seconds.") if @debug
+        send("start_#{monitor}!")
+      }
+    else
+      debug("No preconfigured monitors.") if @debug
+    end
   end
 
   MONITORS.each { |m,i|
@@ -68,7 +84,7 @@ class Cellumon
   end
 
   def threads_and_memory!
-    trigger!(:threads_and_memory) { "#{threads}; #{memory}" }
+    trigger!(:threads_and_memory) { console "#{threads}; #{memory}" }
   end
 
   private
@@ -90,17 +106,34 @@ class Cellumon
     "Memory: #{'%0.2f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
   end
 
-  def console(message)
+  def console(message, options={})
     if @logger
-      @logger.console("#{mark}#{message}", reporter: "Cellumon")
+      @logger.console(message, options.merge(reporter: "Cellumon"))
     else
-      plain_output(message)
+      plain_output("#{mark}#{message}")
     end
   rescue
-    plain_output(message)
+    plain_output("#{mark}#{message}")
+  end
+
+  def debug(message)
+    console(message, level: :debug)
+  end
+
+  def exception(ex, message)
+    if @logger
+      @logger.exception(ex, message)
+    else
+      plain_output("(#{ex.class}) #{ex.message}: #{message}")
+    end
+  rescue
+    plain_output("(#{ex.class}) #{ex.message}: #{message}")
+  ensure
+    plain_output("(#{ex.class}) #{ex.message}: #{message}")
   end
 
   def trigger!(monitor)
+    puts "trigger: #{monitor}" if @debug
     if ready?(monitor)
       result = yield
       ready! monitor
@@ -108,6 +141,8 @@ class Cellumon
     @timers[monitor].cancel rescue nil
     @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
     result
+  rescue => ex
+    exception(ex, "Cellumon > Failure to trigger: #{monitor}")
   end
 
   def mark
