@@ -21,7 +21,7 @@ class Cellumon
     thread_report: 15,
     thread_summary: 3,
     memory_count: 13,
-    thread_and_memory_report: 45
+    threads_and_memory: 45
   }
 
   def initialize(options={})
@@ -67,7 +67,7 @@ class Cellumon
     trigger!(:thread_report) { console threads }
   end
 
-  def thread_and_memory_report!
+  def threads_and_memory!
     trigger!(:thread_and_memory_report) { "#{threads}; #{memory}" }
   end
 
@@ -91,13 +91,13 @@ class Cellumon
   end
 
   def console(message)
-    if @logger && @logger.respond_to?(:console)
+    if @logger
       @logger.console("#{mark}#{message}", reporter: "Cellumon")
     else
-      message = "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
-      STDERR.puts message
-      STDOUT.puts message
+      plain_output(message)
     end
+  rescue
+    plain_output(message)
   end
 
   def trigger!(monitor)
@@ -123,7 +123,13 @@ class Cellumon
     }
   }
 
-  def output object
+  def plain_output(message)
+    message = "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
+    STDERR.puts message
+    STDOUT.puts message
+  end
+
+  def pretty_output object
     puts JSON.pretty_generate(object)
   end
 
