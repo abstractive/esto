@@ -7,7 +7,7 @@ class Cellumon
 
   class << self
     def start!(options={})
-      name = options.fetch(:name, :cellumon)
+      name = options.delete(:name) || :cellumon
       monitors = options.delete(:monitors)
       return unless monitors.is_a? Array
       Cellumon.supervise(as: name, args: [options])
@@ -68,7 +68,7 @@ class Cellumon
   end
 
   def threads_and_memory!
-    trigger!(:thread_and_memory_report) { "#{threads}; #{memory}" }
+    trigger!(:threads_and_memory) { "#{threads}; #{memory}" }
   end
 
   private
