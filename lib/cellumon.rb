@@ -101,7 +101,7 @@ class Cellumon
   end
 
   def console(message)
-    if @logger && @logger.respond_to? :console
+    if @logger && @logger.respond_to?(:console)
       @logger.console("#{mark}#{message}", reporter: "Cellumon")
     else
       message = "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
