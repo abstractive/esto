@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |gem|
   gem.name         = "proceso"
-  gem.version      = "0.4.0"
+  gem.version      = "0.5.0"
   gem.platform     = Gem::Platform::RUBY
   gem.summary      = "Monitor processes; uptime, threads and memory, and actor system states."
   gem.description  = "Process statistics, and utility for finding problems in Celluloid systems."

@@ -1,10 +1,9 @@
 require 'json'
-require 'celluloid/current'
+require 'abstractive/actor'
 require 'abstractive/timespans'
 
-class Abstractive::Proceso
+class Abstractive::Proceso < Abstractive::Actor
 
-  include Celluloid
   include Abstractive::TimeSpans
 
   class << self
@@ -72,7 +71,7 @@ class Abstractive::Proceso
   }
     
   def uptime!
-    trigger!(:uptime) { console "Uptime: #{readable_duration(noteTime.now.to_i - @start.to_i)}" }
+    trigger!(:uptime) { console "Uptime: #{readable_duration(duration(Time.now, @start)}" }
   end
     
   def memory_count!
@@ -114,32 +113,6 @@ class Abstractive::Proceso
     "Memory: #{'%0.2f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
   end
 
-  def console(message, options={})
-    if @logger
-      @logger.console(message, options.merge(local: true, reporter: "Cellumon"))
-    else
-      plain_output("#{mark}#{message}")
-    end
-  rescue
-    plain_output("#{mark}#{message}")
-  end
-
-  def debug(message)
-    console(message, level: :debug)
-  end
-
-  def exception(ex, message)
-    if @logger
-      @logger.exception(ex, message)
-    else
-      plain_output("(#{ex.class}) #{ex.message}: #{message}")
-    end
-  rescue
-    plain_output("(#{ex.class}) #{ex.message}: #{message}")
-  ensure
-    plain_output("(#{ex.class}) #{ex.message}: #{message}")
-  end
-
   def trigger!(monitor)
     puts "trigger: #{monitor}" if @debug
     if ready?(monitor)
@@ -165,15 +138,5 @@ class Abstractive::Proceso
       @semaphor[monitor].synchronize { @status[monitor] == state }
     }
   }
-
-  def plain_output(message)
-    message = "*, [#{Time.now.strftime('%FT%T.%L')}] #{mark}#{message}"
-    STDERR.puts message
-    STDOUT.puts message
-  end
-
-  def pretty_output object
-    puts JSON.pretty_generate(object)
-  end
 
 end
