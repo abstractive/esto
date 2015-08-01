@@ -10,7 +10,7 @@ class Abstractive::Esto < Abstractive::Actor
 
   class << self
     def start!(options={})
-      name = options.delete(:name) || :proceso
+      name = options.delete(:name) || :esto
       Abstractive::Esto.supervise(as: name, args: [options])
       Celluloid[name]
     end
