@@ -115,7 +115,7 @@ class Abstractive::Esto < Abstractive::Actor
     puts "trigger: #{monitor}" if @debug
     if ready?(monitor)
       result = yield
-      ready! monitor`
+      ready! monitor
     end
     @timers[monitor].cancel rescue nil
     @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
