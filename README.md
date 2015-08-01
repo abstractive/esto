@@ -1,3 +1,3 @@
-`Abstractive::Proceso`
+`Abstractive::Esto`
 
-Monitor processes; uptime, threads and memory, and actor system states.
+Monitor `this` process; watch uptime, threads and memory, and actor system states.

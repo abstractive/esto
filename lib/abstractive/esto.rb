@@ -3,7 +3,7 @@ require 'abstractive'
 require 'abstractive/timespans'
 require 'abstractive/actor'
 
-class Abstractive::Proceso < Abstractive::Actor
+class Abstractive::Esto < Abstractive::Actor
 
   extend Forwardable
   def_delegators :"Abstractive::TimeSpans", :duration, :readable_duration
@@ -11,7 +11,7 @@ class Abstractive::Proceso < Abstractive::Actor
   class << self
     def start!(options={})
       name = options.delete(:name) || :proceso
-      Abstractive::Proceso.supervise(as: name, args: [options])
+      Abstractive::Esto.supervise(as: name, args: [options])
       Celluloid[name]
     end
   end
@@ -121,12 +121,12 @@ class Abstractive::Proceso < Abstractive::Actor
     @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
     result
   rescue => ex
-    exception(ex, "Abstractive::Proceso > Failure to trigger: #{monitor}")
+    exception(ex, "Abstractive::Esto > Failure to trigger: #{monitor}")
   end
 
   [:debug,:console].each { |m|
     define_method(m) {|message, options={}|
-      super(message, options.merge(reporter: "Abstractive::Proceso", declare: @declare))
+      super(message, options.merge(reporter: "Abstractive::Esto", declare: @declare))
     }
   }
 
