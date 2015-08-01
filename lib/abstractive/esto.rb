@@ -29,6 +29,7 @@ class Abstractive::Esto < Abstractive::Actor
     @semaphor = {}
     @status = {}
     @timers = {}
+    @short = options.fetch(:short, false)
     @debug = options.fetch(:debug, false)
     @logger = options.fetch(:logger, nil)
     @declare = options.fetch(:declare, false)
@@ -69,7 +70,7 @@ class Abstractive::Esto < Abstractive::Actor
   }
     
   def uptime!
-    trigger!(:uptime) { console "Uptime: #{readable_duration(@running.duration_so_far)}" }
+    trigger!(:uptime) { console "#{(@short ? "U" : "Uptime")}: #{readable_duration(@running.duration_so_far)}" }
   end
     
   def memory_count!
@@ -101,14 +102,15 @@ class Abstractive::Esto < Abstractive::Actor
     a = threads.select { |id,status| status == 'aborting' }.count
     nt = threads.select { |id,status| status === false }.count
     te = threads.select { |id,status| status.nil? }.count
-    "Threads #{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
+    "#{@short ? "T:" : "Threads "}#{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
   end
 
   def memory
     total = `pmap #{Process.pid} | tail -1`[10,40].strip[0..-1].to_i
     gb = (total / (1024 * 1024)).floor
     mb = total / 1024
-    "Memory: #{'%0.3f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
+    #de Fuzzy math but fine for now.
+    "#{@short ? "M:" : "Memory: "}#{'%0.2f' % "#{gb}.#{mb}"}gb"
   end
 
   def trigger!(monitor)
