@@ -5,7 +5,8 @@ require 'abstractive/actor'
 
 class Abstractive::Proceso < Abstractive::Actor
 
-  include Abstractive::TimeSpans::Methods
+  extend Forwardable
+  def_delegators :"Abstractive::TimeSpans", :duration, :readable_duration
 
   class << self
     def start!(options={})
@@ -30,10 +31,10 @@ class Abstractive::Proceso < Abstractive::Actor
     @timers = {}
     @debug = options.fetch(:debug, false)
     @logger = options.fetch(:logger, nil)
-    @mark = options.fetch(:mark, false)
+    @declare = options.fetch(:declare, false)
     @intervals = MONITORS.dup
     @options = options
-    @start = Time.now
+    @running = Hitimes::Interval.now
     async.start
   end
 
@@ -68,7 +69,7 @@ class Abstractive::Proceso < Abstractive::Actor
   }
     
   def uptime!
-    trigger!(:uptime) { console "Uptime: #{readable_duration(duration(Time.now, @start))}" }
+    trigger!(:uptime) { console "Uptime: #{readable_duration(@running.duration_so_far)}" }
   end
     
   def memory_count!
@@ -120,12 +121,14 @@ class Abstractive::Proceso < Abstractive::Actor
     @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
     result
   rescue => ex
-    exception(ex, "Cellumon > Failure to trigger: #{monitor}")
+    exception(ex, "Abstractive::Proceso > Failure to trigger: #{monitor}")
   end
 
-  def mark
-    @mark ? "Cellumon > " : ""
-  end
+  [:debug,:console].each { |m|
+    define_method(m) {|message, options={}|
+      super(message, options.merge(reporter: "Abstractive::Proceso", declare: @declare))
+    }
+  }
 
   [:ready, :running, :stopped].each { |state|
     define_method("#{state}!") { |monitor|
