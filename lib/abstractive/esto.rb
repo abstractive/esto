@@ -106,22 +106,22 @@ class Abstractive::Esto < Abstractive::Actor
 
   def memory
     total = `pmap #{Process.pid} | tail -1`[10,40].strip[0..-1].to_i
-    gb = (total / (1024 * 1024)).to_i
-    mb = total % gb
-    "Memory: #{'%0.2f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
+    gb = (total / (1024 * 1024)).floor
+    mb = total / 1024
+    "Memory: #{'%0.3f' % "#{gb}.#{mb}"}gb" #de Very fuzzy math but fine for now.
   end
 
   def trigger!(monitor)
     puts "trigger: #{monitor}" if @debug
     if ready?(monitor)
       result = yield
-      ready! monitor
+      ready! monitor`
     end
     @timers[monitor].cancel rescue nil
     @timers[monitor] = after(@intervals[monitor]) { send("#{monitor}!") }
     result
   rescue => ex
-    exception(ex, "Abstractive::Esto > Failure to trigger: #{monitor}")
+    exception(ex, "Abstractive::Esto > Failure to trigger: #{monitor}") if @debug
   end
 
   [:debug,:console].each { |m|
