@@ -1,4 +1,5 @@
 require 'json'
+require 'colorize'
 require 'abstractive'
 require 'abstractive/timespans'
 require 'abstractive/actor'
@@ -102,7 +103,7 @@ class Abstractive::Esto < Abstractive::Actor
     a = threads.select { |id,status| status == 'aborting' }.count
     nt = threads.select { |id,status| status === false }.count
     te = threads.select { |id,status| status.nil? }.count
-    "#{@short ? "T:" : "Threads "}#{threads.count}: #{r}r #{s}s #{a}a #{nt}nt #{te}te"
+    "#{@short ? "T:" : "Threads "}#{threads.count.to_s.bold}: #{r.to_s.green}r #{s.to_s.cyan}s #{a.to_s.yellow.bold}a #{nt.to_s.light_red}nt #{te.to_s.red.bold}te"
   end
 
   def memory
