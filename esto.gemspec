@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |gem|
   gem.name         = "esto"
-  gem.version      = "0.7.1"
+  gem.version      = "0.7.2"
   gem.platform     = Gem::Platform::RUBY
   gem.summary      = "Monitor processes; uptime, threads and memory, and actor system states."
   gem.description  = "Process statistics, and utility for finding problems in Celluloid systems."
@@ -20,4 +20,5 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency "celluloid", ">= 0.17.0"
   gem.add_runtime_dependency "abstractive"
   gem.add_runtime_dependency "timespans"
+  gem.add_runtime_dependency "colorize"
 end
